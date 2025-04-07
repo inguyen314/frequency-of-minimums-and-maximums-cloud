@@ -5,19 +5,19 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Frequency Of Minimums And Maximums</title> <!-- DISTRICT Home Page -->
+        <title>Frequency Of Minimum and Maximums</title> <!-- DISTRICT Home Page -->
         <meta name="Description" content="U.S. Army Corps of Engineers DISTRICT HERE Home Page" />
-        <link rel="stylesheet" href="./css/body.css" />
-        <link rel="stylesheet" href="./css/breadcrumbs.css" />
-        <link rel="stylesheet" href="./css/jumpMenu.css" />
-        <script type="text/javascript" src="./js/main.js"></script>
+        <link rel="stylesheet" href="css/body.css" />
+        <link rel="stylesheet" href="css/breadcrumbs.css" />
+        <link rel="stylesheet" href="css/jumpMenu.css" />
+        <script type="text/javascript" src="js/main.js"></script>
         <!-- Add sidebar.css IF NOT LOAD SIDEBAR TEMPLATE -->
-        <link rel="stylesheet" href="./css/sidebar.css"/>
+        <link rel="stylesheet" href="css/sidebar.css"/>
         <!-- Add content window style IF NOT LOAD SIDEBAR TEMPLATE -->
-        <link rel="stylesheet" href="./css/styles.css">
-        <link rel="stylesheet" href="./css/popup.css">
-        <link rel="stylesheet" href="./css/responsive.css">
-        <link rel="stylesheet" href="./css/loadingCircle.css">
+        <link rel="stylesheet" href="css/styles.css">
+        <link rel="stylesheet" href="css/popup.css">
+        <link rel="stylesheet" href="css/responsive.css">
+        <link rel="stylesheet" href="css/loadingCircle.css">
     </head>
     <body>
         <div id="page-container">
@@ -36,7 +36,7 @@
                             <!-- Page Content Here -->
                             <div class="box-usace">
                                 <h2 class="box-header-striped">
-                                    <span class="titleLabel title">Frequency Of Minimums And Maximums</span>
+                                    <span class="titleLabel title">Frequency Of Minimum and Maximums</span>
                                     <span class="rss"></span>
                                 </h2>
                                 <div class="box-content" style="margin:auto">
@@ -47,7 +47,7 @@
 
                                 
                                             <div class="header">
-                                                <h1 id="main-title">Frequency Of Minimums And Maximums</h1>
+                                                <h1 id="main-title">Frequency Of Minimum and Maximums</h1>
                                                 <label>
                                                     <input type="checkbox">
                                                     <span></span>
@@ -104,141 +104,42 @@
                                                                     <td>Ending Year</td>
                                                                 </tr>
                                                                 <tr>
-                                                                    <td><input type="date" id="begin-input" value="2018-01-01"></td>
-                                                                    <td><input type="date" id="end-input" value="2020-12-31"></td>
+                                                                    <td><input type="date" id="begin-input" value="2018-01-01" disabled></td>
+                                                                    <td><input type="date" id="end-input" value="2020-12-31" disabled></td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
                                                     </div>
                                                 </div>
 
-                                                <div id="separator-div" class="separator hidden"></div>
+                                                <div class="separator hidden"></div>
 
-                                                <div class="input-checkbox hidden">
-                                                    
-                                                    <div class="data-exclusion">
-
-                                                        <h2>Time Window for Data Exclusions (Season, Single month, Single day, etc...)</h2>
-
-                                                        <div class="checkbox">
-
-                                                            <div>
-                                                                <input type="checkbox" id="exclusion-checkbox">
-                                                                <label>EXCLUSION</label>
-                                                            </div>
-
-                                                            <div>
-                                                                <input type="checkbox" id="no-exclusion-checkbox" checked>
-                                                                <label>No Data Exclusion (Default)</label>
-                                                            </div>
-
-                                                        </div>
-
+                                                <div class="select-time-window-analysis hidden">
+                                                    <h2 class="select-por-title">Statistical Time Window -<br>Please Select POR or User-specified Time Window option:<br><span></span>The follwing records will be used as base record set for minimums and maximums that will be checked</h2>
+                                                    <div>
+                                                        <input type="checkbox" id="entire-por-checkbox">
+                                                        <label>POR - Period of Record - See Default Time Window</label>
                                                     </div>
-
-                                                    <div class="exclusion-settings hidden">
-
-                                                        <div class="checkbox">
-
-                                                            <div class="single-month-day-only">
-
-                                                                <div class="month-day-options">
-
-                                                                    <div class="single-month">
-                                                                        <input type="checkbox" id="single-month-checkbox">
-                                                                        <label>Single Month Only</label>
-                                                                    </div>
-
-                                                                    <div class="single-day">
-                                                                        <input type="checkbox" id="single-day-checkbox">
-                                                                        <label>Single Day Only</label>
-                                                                    </div>
-
-                                                                </div>
-
-                                                                <div class="single-month-day-input hidden">
-                                                                    <input type="text" id="single-month-day-txbox">
-                                                                    <span>==> Month (MM) or Day (DD)</span>
-                                                                </div>
-                                                                
-                                                            </div>
-
-                                                            <div class="specific-time-window-only">
-
-                                                                <div class="specific-time-window">
-                                                                    <input type="checkbox" id="specific-time-window-checkbox">
-                                                                    <label>Specific Time Window Only</label>
-                                                                </div>
-
-                                                                <div class="specific-time-window-input hidden">
-                                                                    <div>
-                                                                        <label>From:</label>
-                                                                        <input type="text" id="time-window-from-checkbox">
-                                                                    </div>
-                                                                    
-                                                                    <div>
-                                                                        <label>To:</label>
-                                                                        <input type="text" id="time-window-to-checkbox">
-                                                                    </div>
-                                                                    
-                                                                    <span>==> Month-Day (MM-DD)</span>
-                                                                </div>
-
-                                                            </div>
-
-                                                        </div>
-
+                                                    <div>
+                                                        <input type="checkbox" id="time-window-checkbox">
+                                                        <label>User Specified Time Window - Enter Time Window in Adjacent Fields (MM-DD-YYYY)</label>
                                                     </div>
-                                                    
-                                                    <div class="exceedance-settings hidden">
+                                                </div>
 
-                                                        <div class="exceedance-level">
-                                                            <label>Exceedance Level:</label>
-                                                            <input type="text" id="exceedance-level-txtbox">
-                                                        </div>
+                                                <div class="separator hidden"></div>
 
-                                                        <div class="exceedance-type">
-                                                            <label>Exceedance Type:</label>
-                                                            <select id="exceedance-type-dropbox">
-                                                                <option value="ABOVE">ABOVE</option>
-                                                                <option value="BELOW">BELOW</option>
-                                                            </select>
-                                                        </div>
-
+                                                <div class="select-result-window hidden">
+                                                    <h2 class="select-result-window-title">Select Minimum and Maximum Analysis Time Window (MM-DD-YYYY)</h2>
+                                                    <div>
+                                                        <input type="text" id="from-date" placeholder="MM-DD-YYYY">
+                                                        <label>TO</label>
+                                                        <input type="text" id="to-date" placeholder="MM-DD-YYYY">
                                                     </div>
-                                                    
                                                 </div>
 
+                                                <div class="buttons">
+                                                    <button class="html" id="button-html" disabled>Analyze Statistic</button>
                                                 </div>
-
-                                                <div id="buttons-div">
-
-                                                    <button id="instruction-btn">Instructions</button>
-
-                                                    <button id="compute-html-btn" disabled>Compute HTML</button>
-
-                                                </div>
-
-                                                <div id="instructions-div" class="hidden">
-
-                                                    <h2 class="title">How to use this tool.</h2>
-
-                                                    <ul>
-                                                        <li><strong>Select a Basin</strong> - Choose a basin from the dropdown list.</li>
-                                                        <li><strong>Select a Gage</strong> - Pick the desired gage from the available options.</li>
-                                                        <li><strong>Choose a Time Window</strong> - Select the time period for which you want the data to be analyzed.</li>
-                                                        <li><strong>Select Time Window for Exclusion</strong> - Choose a time window where only data inside this period will be used for the analysis, excluding other periods.</li>
-                                                        <li><strong>Enter the Exceedance Level</strong> - Input the threshold level for the analysis.</li>
-                                                        <li><strong>Choose Exceedance Level Type</strong> - Select <strong>'ABOVE'</strong> for stages exceeding the specified level or <strong>'BELOW'</strong> for stages below it.</li>
-                                                        <li><strong>Press the "Compute HTML" Button</strong> - Click this button to generate the analysis results in HTML format.</li>
-                                                    </ul>
-
-                                                </div>
-
-                                                <div id="error-message" class="hidden">
-                                                    <h2>Error Message</h2>
-                                                </div>
-
                                             </div>
 
                                             <div id="loading-image">
@@ -264,61 +165,48 @@
                                                     <span style="--i: 18;"></span>
                                                     <span style="--i: 19;"></span>
                                                     <span style="--i: 20;"></span>
-                                                    <h2 class="text-string">Loading Data<br><b>If this takes more than 15 seconds, reload the page.</b></h2>
+                                                    <h2 class="text-string">Loading Data...<br><b>If this takes more than 15 seconds, reload the page.</b></h2>
                                                 </div>
                                             </div>
 
-                                            <div id="results" class="hidden">
-
-                                                <div class="results-info">
-                                                    <p class="top"></p>
-                                                    <p class="bottom"></p>
+                                            <div class="results hidden">
+                                                <div class="gage-info">
+                                                    <h2></h2>
                                                 </div>
-
                                                 <div class="tables">
-                                                    <table id="by-year-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th colspan="2">Exceedance Data By Year (Newest to Oldest)</th>
-                                                            </tr>
-                                                            <tr>
-                                                                <th>Water Level</th>
-                                                                <th>Date</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="by-year-table-body"></tbody>
-                                                    </table>
-    
-                                                    <table id="magnitude-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th colspan="2">Exceedance Data By Magnitude (Largest to Smallest)</th>
-                                                            </tr>
-                                                            <tr>
-                                                                <th>Water Level</th>
-                                                                <th>Date</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="magnitude-table-body"></tr>
-                                                        </tbody>
-                                                    </table>
+                                                    <div class="maximum">
+                                                        <p></p>
+                                                        <table id="maximum-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Date</th>
+                                                                    <th>Record Level</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="maximum-table-body"></tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="minimum">
+                                                        <p></p>
+                                                        <table id="minimum-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Date</th>
+                                                                    <th>Record Level</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="minimum-table-body"></tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
-                            
                                             </div>
-                                            
-                                            <!-- <script src="https://cdn.sheetjs.com/xlsx-0.18.2/package/dist/xlsx.full.min.js"></script> -->
-                                            <script src="./js/xlsx.full.min.js"></script>
 
-                                            <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script> -->
-                                            <script src="./js/jspdf.umd.min.js"></script>
+                                            <script src="https://cdn.sheetjs.com/xlsx-0.18.2/package/dist/xlsx.full.min.js"></script>
+                                            <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+                                            <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+                                            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-                                            <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script> -->
-                                            <script src="./js/jspdf.plugin.autotable.min.js"></script>
-
-                                            <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> -->
-                                            <script src="./js/html2canvas.min.js"></script>
-
-                                            <script type="module" src="./js/script.js"></script>
+                                            <script type="module" src="js/script.js"></script>
                                         </div>
 
                                         
@@ -351,26 +239,25 @@
                 <button id="returnTop" title="Return to Top of Page">Top</button>
             </div>
         </div>
-<!-- 
+
         <div id="popup-window">
-            <img src="../images/usace_logo.png" alt="usace-logo">
+            <img src="images/loading4.gif" alt="usace-logo">
             <h2 id="popup-title">This is the POPUP window Title.</h2>
             <p id="popup-message">Lorem ipsum dolor sit amet consectetur adipisicing elit. Maxime delectus quasi alias dolore maiores enim nulla exercitationem quos, minus non?</p>
             <a href="#" id="popup-button">Close</a>
-        </div> -->
+        </div>
 
         <footer id="footer">
             <!--Footer content populated here by script tag at end of body -->
         </footer>
-        <script src="../../js/libraries/jQuery-3.3.6.min.js"></script>
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="js/libraries/jQuery-3.3.6.min.js"></script>
         <script defer>
             // When the document has loaded pull in the page header and footer skins
             $(document).ready(function () {
                 // Change the v= to a different number to force clearing the cached version on the client browser
-                $('#header').load('../../templates/DISTRICT.header.html?v=1');
-                // $('#sidebar').load('../../templates/DISTRICT.sidebar.html?v=1');
-                $('#footer').load('../../templates/DISTRICT.footer.html?v=1');
+                $('#header').load('templates/DISTRICT.header.html?v=1');
+                // $('#sidebar').load('templates/DISTRICT.sidebar.html?v=1');
+                $('#footer').load('templates/DISTRICT.footer.html?v=1');
             })
         </script>
     </body>

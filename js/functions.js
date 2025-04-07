@@ -130,8 +130,16 @@ export function getMeanMinMaxList(dataList) {
     let day = 1;
     for (let i = 1; i <= 372; i++) {
 
-        let dayStr = day > 9 ? `${day}` : `0${day}`;
-        let monthStr = month > 9 ? `${month}` : `0${month}`;
+        let dayStr = `0${day}`;
+        let monthStr = `0${month}`;
+
+        if (month > 9) {
+            monthStr = `${month}`;
+        }
+
+        if (day > 9) {
+            dayStr = `${day}`;
+        }
 
         if (i % 31 === 0){
 
@@ -152,9 +160,9 @@ export function getMeanMinMaxList(dataList) {
     }
 
     // Create copy of the list for the average, min and max values
-    let averageList = [];
-    let minList = [];
-    let maxList = [];
+    let averageList = [],
+        minList = [],
+        maxList = [];
 
     dateStageList.forEach(element => {
 

@@ -4,72 +4,53 @@ import {
     addBasinNames,
     createUrl,
     formatString,
+    getList,
+    getMeanMinMaxList,
+    extractDataForTable,
+    createTable,
+    clearTable,
     haveOneYearOfData,
     blurBackground,
     popupMessage,
+    showLoading,
     loadingPageData
 } from './functions.js'
 
 
-// Web site app information
-const appMetadata = {
-    name: "Frequency Duration",
-    description: "PAGE DESCRIPTION",
-    author: "U.S. Army Corps of Engineers, St. Louis District",
-    version: "1.0",
-    contact: {
-        email: "dll-cemvs-water-managers@usace.army.mil",
-        website: "https://www.mvs-wc.usace.army.mil/"
-    }
-}
+// Console Log Messages
+const consoleLogType = [1,2]; // 1:INFO ; 2:TEST ; 3:INITIAL FETCH ; 'ANY':CUSTOM
 
-
-// General Const Elements
+// Const Elements
 const basinName = document.getElementById('basinCombobox'),
       gageName = document.getElementById('gageCombobox'),
       beginDate = document.getElementById('begin-input'),
       endDate = document.getElementById('end-input'),
-      PORBeginDate = document.querySelector('#info-table .por-start'),
-      POREndDate = document.querySelector('#info-table .por-end'),
-      instructionsBtn = document.getElementById('instruction-btn'),
+      computeHTMLBtn = document.getElementById('button-html'),
+      resultsDiv = document.querySelector('.results'),
       darkModeCheckbox = document.querySelector('.header label input'),
       popupWindowBtn = document.getElementById('popup-button'),
       isProjectLabel = document.getElementById('is-project'),
-      separatorDiv = document.getElementById('separator-div'),
-      instructionsDiv = document.getElementById('instructions-div'),
-      resultsDiv = document.getElementById('results'),
-      errorMessageDiv = document.getElementById('error-message'),
-      errorMessageText = document.querySelector('#error-message h2');
-
-// Specific Const Elements
-const computeHTMLBtn = document.getElementById('compute-html-btn'),
-      singleMonthDayTextbox = document.getElementById('single-month-day-txbox'),
-      specificTWFromTextbox = document.getElementById('time-window-from-checkbox'),
-      specificTWToTextbox = document.getElementById('time-window-to-checkbox'),
-      exclusionCheckbox = document.getElementById('exclusion-checkbox'),
-      noExclusionCheckbox = document.getElementById('no-exclusion-checkbox'),
-      exclusionSettingsDiv = document.querySelector('.exclusion-settings'),
-      singleMonthCheckbox = document.getElementById('single-month-checkbox'),
-      singleDayCheckbox = document.getElementById('single-day-checkbox'),
-      specificTimeWindowCheckbox = document.getElementById('specific-time-window-checkbox'),
-      singleMonthDayInputDiv = document.querySelector('.exclusion-settings .single-month-day-input'),
-      specificTimeWindowDiv = document.querySelector('.exclusion-settings .specific-time-window-input'),
-      settingDiv = document.querySelector('.input-checkbox'),
-      byYearTableBody = document.getElementById('by-year-table-body'),
-      magnitudeTableBody = document.getElementById('magnitude-table-body'),
-      resultDiv = document.getElementById('results'),
-      statsNumbers = document.querySelectorAll('#results .statistics .number'),
-      exceedanceDiv = document.querySelector('.input-checkbox .exceedance-settings'),
-      exceedanceLeveltextBox = document.getElementById('exceedance-level-txtbox'),
-      exceedanceTypeDropBox = document.getElementById('exceedance-type-dropbox'),
-      resultsInfoTop = document.querySelector('.results-info .top'),
-      resultsInfoBottom = document.querySelector('.results-info .bottom');
+      porStartDate = document.querySelector('#info-table .por-start'),
+      porEndDate = document.querySelector('#info-table .por-end'),
+      porCheckbox = document.getElementById('entire-por-checkbox'),
+      porTimeWindow = document.getElementById('time-window-checkbox'),
+      selectTimeWindowAnalysisDiv = document.querySelector('.container .select-time-window-analysis'),
+      selectTimeWindowShowDiv = document.querySelector('.container .select-result-window'),
+      separatorsList = document.querySelectorAll('.container .separator'),
+      fromTextbox = document.getElementById('from-date'),
+      toTextbox = document.getElementById('to-date'),
+      resultGageInfoText = document.querySelector('.results .gage-info h2'),
+      maxTableBody = document.getElementById('maximum-table-body'),
+      minTableBody = document.getElementById('minimum-table-body'),
+      maxTableDiv = document.querySelector('.results .maximum'),
+      minTableDiv = document.querySelector('.results .minimum'),
+      maxTableText = document.querySelector('.results .maximum p'),
+      minTableText = document.querySelector('.results .minimum p');
 
 
 let params = new URLSearchParams(window.location.search);
 const officeName = params.get("office") ? params.get("office").toUpperCase() : "MVS";
 const cda = params.get("cda") ? params.get("cda") : "internal";
-const conlog = params.get("log") ? params.get("log") : "false";
 let isDeveloper = params.get("developer") ? params.get("developer").toLowerCase() : null;
 
 // Manually set up Maintenance
@@ -79,10 +60,8 @@ if (isDeveloper === "true"){
     isMaintenance = false;
 }
 
-const consoleLog = conlog === "true" ? true : false;
-
-// Global Variable
-let globalDatman = null;
+consoleLog(1, "Office ID: ", officeName)
+consoleLog(1, "CDA: ", cda)
 
 if (isMaintenance){
 
@@ -115,13 +94,16 @@ if (isMaintenance){
             let setBaseUrl = null;
             if (cda === "internal") {
                 setBaseUrl = `https://coe-${office.toLowerCase()}uwa04${office.toLowerCase()}.${office.toLowerCase()}.usace.army.mil:8243/${office.toLowerCase()}-data/`;
+                consoleLog(1, "setBaseUrl: ", setBaseUrl);
             } else if (cda === "public") {
                 setBaseUrl = `https://cwms-data.usace.army.mil/cwms-data/`;
+                consoleLog(1, "setBaseUrl: ", setBaseUrl);
             }
         
             // Define the URL to fetch location groups based on category
             // const categoryApiUrl = setBaseUrl + `location/group?office=${office}&include-assigned=false&location-category-like=${setCategory}`;
             const categoryApiUrl = setBaseUrl + `location/group?office=${office}&group-office-id=${office}&category-office-id=${office}&category-id=${setCategory}`;
+            consoleLog(1, "categoryApiUrl: ", categoryApiUrl);
         
             // Initialize maps to store metadata and time-series ID (TSID) data for various parameters
             const metadataMap = new Map();
@@ -129,8 +111,6 @@ if (isMaintenance){
             const tsidDatmanMap = new Map();
             const tsidStageMap = new Map();
             const projectMap = new Map();
-            const tsidDatmanInflowMap = new Map();
-            const tsidDatmanOutflowMap = new Map();
         
             // Initialize arrays for storing promises
             const metadataPromises = [];
@@ -138,8 +118,6 @@ if (isMaintenance){
             const datmanTsidPromises = [];
             const stageTsidPromises = [];
             const projectPromises = [];
-            const datmanInflowTsidPromises = [];
-            const datmanOutflowTsidPromises = [];
         
             // Fetch location group data from the API
             fetch(categoryApiUrl)
@@ -172,6 +150,7 @@ if (isMaintenance){
                     // Loop through each basin and fetch data for its assigned locations
                     basins.forEach(basin => {
                         const basinApiUrl = setBaseUrl + `location/group/${basin}?office=${officeName}&category-id=${setCategory}`;
+                        consoleLog(1, "basinApiUrl: ", basinApiUrl);
         
                         apiPromises.push(
                             fetch(basinApiUrl)
@@ -239,6 +218,7 @@ if (isMaintenance){
                                                         })
                                                         .then(ownerData => {
                                                             if (ownerData) {
+                                                                consoleLog(3, "ownerData", ownerData);
                                                                 ownerMap.set(loc['location-id'], ownerData);
                                                             }
                                                         })
@@ -265,6 +245,7 @@ if (isMaintenance){
                                                         })
                                                         .then(projectData => {
                                                             if (projectData) {
+                                                                consoleLog(3, "projectData", projectData);
                                                                 projectMap.set(loc['location-id'], projectData);
                                                             }
                                                         })
@@ -293,48 +274,6 @@ if (isMaintenance){
                                                     })
                                                     .catch(error => {
                                                         console.error(`Problem with the fetch operation for stage TSID data at ${tsidDatmanApiUrl}:`, error);
-                                                    })
-                                            );
-        
-                                            // Fetch Inflow TSID data
-                                            const tsidDatmanInflowApiUrl = setBaseUrl + `timeseries/group/Datman-Inflow?office=${officeName}&category-id=${loc['location-id']}`;
-                                            // console.log('tsidDatmanInflowApiUrl:', tsidDatmanInflowApiUrl);
-                                            datmanInflowTsidPromises.push(
-                                                fetch(tsidDatmanInflowApiUrl)
-                                                    .then(response => {
-                                                        if (response.status === 404) return null; // Skip if not found
-                                                        if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-                                                        return response.json();
-                                                    })
-                                                    .then(tsidDatmanInflowData => {
-                                                        // console.log('tsidDatmanInflowData:', tsidDatmanInflowData);
-                                                        if (tsidDatmanInflowData) {
-                                                            tsidDatmanInflowMap.set(loc['location-id'], tsidDatmanInflowData);
-                                                        }
-                                                    })
-                                                    .catch(error => {
-                                                        console.error(`Problem with the fetch operation for stage TSID data at ${tsidDatmanInflowApiUrl}:`, error);
-                                                    })
-                                            );
-        
-                                            // Fetch Outflow TSID data
-                                            const tsidDatmanOutflowApiUrl = setBaseUrl + `timeseries/group/Datman-Outflow?office=${officeName}&category-id=${loc['location-id']}`;
-                                            // console.log('tsidDatmanInflowApiUrl:', tsidDatmanInflowApiUrl);
-                                            datmanOutflowTsidPromises.push(
-                                                fetch(tsidDatmanOutflowApiUrl)
-                                                    .then(response => {
-                                                        if (response.status === 404) return null; // Skip if not found
-                                                        if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-                                                        return response.json();
-                                                    })
-                                                    .then(tsidDatmanOutflowData => {
-                                                        // console.log('tsidDatmanInflowData:', tsidDatmanInflowData);
-                                                        if (tsidDatmanOutflowData) {
-                                                            tsidDatmanOutflowMap.set(loc['location-id'], tsidDatmanOutflowData);
-                                                        }
-                                                    })
-                                                    .catch(error => {
-                                                        console.error(`Problem with the fetch operation for stage TSID data at ${tsidDatmanOutflowApiUrl}:`, error);
                                                     })
                                             );
         
@@ -373,8 +312,6 @@ if (isMaintenance){
                         .then(() => Promise.all(ownerPromises))
                         .then(() => Promise.all(datmanTsidPromises))
                         .then(() => Promise.all(stageTsidPromises))
-                        .then(() => Promise.all(datmanInflowTsidPromises))
-                        .then(() => Promise.all(datmanOutflowTsidPromises))
                         .then(() => {
                             combinedData.forEach(basinData => {
                                 if (basinData['assigned-locations']) {
@@ -408,24 +345,6 @@ if (isMaintenance){
                                             loc['tsid-datman'] = null;  // Append null if missing
                                         }
         
-                                        // Add datman Inflow to json
-                                        const tsidDatmanInflowMapData = tsidDatmanInflowMap.get(loc['location-id']);
-                                        if (tsidDatmanInflowMapData) {
-                                            reorderByAttribute(tsidDatmanInflowMapData);
-                                            loc['tsid-datman-inflow'] = tsidDatmanInflowMapData;
-                                        } else {
-                                            loc['tsid-datman-inflow'] = null;  // Append null if missing
-                                        }
-        
-                                        // Add datman Outflow to json
-                                        const tsidDatmanOutflowMapData = tsidDatmanOutflowMap.get(loc['location-id']);
-                                        if (tsidDatmanOutflowMapData) {
-                                            reorderByAttribute(tsidDatmanOutflowMapData);
-                                            loc['tsid-datman-outflow'] = tsidDatmanOutflowMapData;
-                                        } else {
-                                            loc['tsid-datman-outflow'] = null;  // Append null if missing
-                                        }
-        
                                         // Add stage to json
                                         const tsidStageMapData = tsidStageMap.get(loc['location-id']);
                                         if (tsidStageMapData) {
@@ -446,6 +365,8 @@ if (isMaintenance){
                                 }
                             });
         
+                            consoleLog(3, 'combinedData:', combinedData);
+        
                             const timeSeriesDataPromises = [];
         
                             // Iterate over all arrays in combinedData
@@ -453,15 +374,13 @@ if (isMaintenance){
                                 for (const locData of dataArray['assigned-locations'] || []) {
                                     // Handle temperature, depth, and DO time series
                                     const datmanTimeSeries = locData['tsid-datman']?.['assigned-time-series'] || [];
-                                    const datmanInflowTimeSeries = locData['tsid-datman-inflow']?.['assigned-time-series'] || [];
-                                    const datmanOutflowTimeSeries = locData['tsid-datman-outflow']?.['assigned-time-series'] || [];
         
                                     // Function to create fetch promises for time series data
                                     const timeSeriesDataFetchPromises = (timeSeries, type) => {
                                         return timeSeries.map((series, index) => {
                                             const tsid = series['timeseries-id'];
                                             const timeSeriesDataApiUrl = setBaseUrl + `timeseries?name=${tsid}&begin=${lookBackHours.toISOString()}&end=${currentDateTime.toISOString()}&office=${officeName}`;
-                                           
+                                            consoleLog(1, 'timeSeriesDataApiUrl:', timeSeriesDataApiUrl);
         
                                             return fetch(timeSeriesDataApiUrl, {
                                                 method: 'GET',
@@ -556,12 +475,11 @@ if (isMaintenance){
         
                                     // Create promises for temperature, depth, and DO time series
                                     const datmanPromises = timeSeriesDataFetchPromises(datmanTimeSeries, 'datman');
-                                    const datmanInflowPromises = timeSeriesDataFetchPromises(datmanInflowTimeSeries, 'datman-inflow');
-                                    const datmanOutflowPromises = timeSeriesDataFetchPromises(datmanOutflowTimeSeries, 'datman-outflow');
         
                                     // Additional API call for extents data
                                     const timeSeriesDataExtentsApiCall = (type) => {
                                         const extentsApiUrl = setBaseUrl + `catalog/TIMESERIES?page-size=5000&office=${officeName}`;
+                                        consoleLog(1, 'extentsApiUrl:', extentsApiUrl);
         
                                         return fetch(extentsApiUrl, {
                                             method: 'GET',
@@ -576,9 +494,7 @@ if (isMaintenance){
         
                                                 // Collect TSIDs from temp, depth, and DO time series
                                                 const datmanTids = datmanTimeSeries.map(series => series['timeseries-id']);
-                                                const datmanInflowTids = datmanInflowTimeSeries.map(series => series['timeseries-id']);
-                                                const datmanOutflowTids = datmanOutflowTimeSeries.map(series => series['timeseries-id']);
-                                                const allTids = [...datmanTids, ...datmanInflowTids, ...datmanOutflowTids]; // Combine both arrays
+                                                const allTids = [...datmanTids]; // Combine both arrays
         
                                                 // Iterate over all TSIDs and create extents data entries
                                                 allTids.forEach((tsid, index) => {
@@ -597,12 +513,8 @@ if (isMaintenance){
                                                         // console.log({ locData })
                                                         // Determine extent key based on tsid
                                                         let extent_key;
-                                                        if (tsid.includes('Stage') || tsid.includes('Elev')) { // Example for another condition
+                                                        if (tsid.includes('Stage') || tsid.includes('Elev') || tsid.includes('Flow')) { // Example for another condition
                                                             extent_key = 'datman';
-                                                        } else if (tsid.includes('Flow-In')) {
-                                                            extent_key = 'datman-inflow';
-                                                        } else if (tsid.includes('Flow-Out')) {
-                                                            extent_key = 'datman-outflow';
                                                         } else {
                                                             return; // Ignore if it doesn't match either condition
                                                         }
@@ -623,7 +535,7 @@ if (isMaintenance){
                                     };
         
                                     // Combine all promises for this location
-                                    timeSeriesDataPromises.push(Promise.all([...datmanPromises, ...datmanInflowPromises, ...datmanOutflowPromises, timeSeriesDataExtentsApiCall()]));
+                                    timeSeriesDataPromises.push(Promise.all([...datmanPromises, timeSeriesDataExtentsApiCall()]));
                                 }
                             }
         
@@ -632,6 +544,7 @@ if (isMaintenance){
         
                         })
                         .then(() => {
+                            consoleLog(1, 'All combinedData data fetched successfully:', combinedData);
          
                             // Step 1: Filter out locations where 'attribute' ends with '.1'
                             combinedData.forEach((dataObj, index) => {
@@ -642,6 +555,7 @@ if (isMaintenance){
                                     const attribute = location['attribute'].toString();
                                     if (attribute.endsWith('.1')) {
                                         // Log the location being removed
+                                        consoleLog(3, `Removing location with attribute '${attribute}' and id '${location['location-id']}' at index ${index}`);
                                         return false; // Filter out this location
                                     }
                                     return true; // Keep the location
@@ -650,6 +564,7 @@ if (isMaintenance){
                                 // console.log(`Updated assigned-locations for index ${index}:`, dataObj['assigned-locations']);
                             });
          
+                            consoleLog(1, 'Filtered all locations ending with .1 successfully:', combinedData);
          
                             // Step 2: Filter out locations where 'location-id' doesn't match owner's 'assigned-locations'
                             combinedData.forEach(dataGroup => {
@@ -667,12 +582,60 @@ if (isMaintenance){
          
                                     // If no match, remove the location
                                     if (!matchingOwnerLocation) {
+                                        consoleLog(3, `Removing location with id ${location['location-id']} as it does not match owner`);
                                         locations.splice(i, 1);
                                     }
                                 }
                             });
+         
+                            consoleLog(1, 'Filtered all locations by matching location-id with owner successfully:', combinedData);
+        
+                            // if (type === "status") {
+                            //     // Only call createTable if no valid data exists
+                            //     const table = createTable(combinedData);
+        
+                            //     // Append the table to the specified container
+                            //     const container = document.getElementById('table_container_alarm_datman');
+                            //     container.appendChild(table);
+                            // } else {
+                            //     // Check if there are valid lastDatmanValues in the data
+                            //     if (hasLastValue(combinedData)) {
+                            //         if (hasDataSpike(combinedData)) {
+                            //             console.log("Data spike detected.");
+                            //             // call createTable if data spike exists
+                            //             const table = createTableDataSpike(combinedData);
+        
+                            //             // Append the table to the specified container
+                            //             const container = document.getElementById('table_container_alarm_datman');
+                            //             container.appendChild(table);
+                            //         } else {
+                            //             console.log("No data spikes detected.");
+                            //             console.log('Valid lastDatmanValue found. Displaying image instead.');
+        
+                            //             // Create an img element
+                            //             const img = document.createElement('img');
+                            //             img.src = '/apps/alarms/images/passed.png'; // Set the image source
+                            //             img.alt = 'Process Completed'; // Optional alt text for accessibility
+                            //             img.style.width = '50px'; // Optional: set the image width
+                            //             img.style.height = '50px'; // Optional: set the image height
+        
+                            //             // Get the container and append the image
+                            //             //const container = document.getElementById('table_container_alarm_datman');
+                            //             //container.appendChild(img);
+                            //         }
+        
+                            //     } else {
+                            //         // Only call createTable if no valid data exists
+                            //         const table = createTable(combinedData);
+        
+                            //         // Append the table to the specified container
+                            //         //const container = document.getElementById('table_container_alarm_datman');
+                            //         //container.appendChild(table);
+                            //     }
+                            // }
         
                             //loadingIndicator.style.display = 'none';
+                            consoleLog(2, "TEST: ", combinedData);
                             initialize(combinedData);
         
         // =======================================================================================================================================
@@ -1267,8 +1230,14 @@ if (isMaintenance){
 
 }
 
+
+//================== GLOBAL VARIABLES =======================\\
+let FROM_BOX_VALID = false;
+let TO_BOX_VALID = false;
+
+
 // Add function to popup window button
-//popupWindowBtn.addEventListener('click', blurBackground);
+popupWindowBtn.addEventListener('click', blurBackground);
 
 loadingPageData();
 
@@ -1276,54 +1245,10 @@ loadingPageData();
 // Initilize page
 function initialize(data) {
 
-    consoleLog ? console.log("Initialize Data: ", data) : null;
-
     // Add dark mode functionality
     darkModeCheckbox.addEventListener('click', function() {
         document.getElementById('content-body').classList.toggle('dark');
         document.getElementById('page-container').classList.toggle('dark');
-    });
-
-    // Add functions to checkbox
-    exclusionCheckbox.addEventListener('click', exclusionBoxChecked);
-    noExclusionCheckbox.addEventListener('click', noExclusionBoxChecked);
-    singleDayCheckbox.addEventListener('click', singleDayBoxChecked);
-    singleMonthCheckbox.addEventListener('click', singleMonthBoxChecked);
-    specificTimeWindowCheckbox.addEventListener('click', specificTimeWindowBoxChecked);
-
-    // Textbox Functions
-    exceedanceLeveltextBox.addEventListener('input', () => {
-        if (isValidNumber(exceedanceLeveltextBox.value)){
-            computeHTMLBtn.disabled = false;
-        } else {
-            computeHTMLBtn.disabled = true;
-        }
-    });
-
-    singleMonthDayTextbox.addEventListener('input', () => {
-        if (isValidNumber(singleMonthDayTextbox.value)){
-            computeHTMLBtn.disabled = false;
-        } else {
-            computeHTMLBtn.disabled = true;
-        }
-    });
-
-    specificTWFromTextbox.addEventListener('input', () => {
-        if (isValidNumber(specificTWFromTextbox.value.split('-')[0]) && isValidNumber(specificTWToTextbox.value.split('-')[0]) &&
-            isValidNumber(specificTWFromTextbox.value.split('-')[1]) && isValidNumber(specificTWToTextbox.value.split('-')[1])){
-            computeHTMLBtn.disabled = false;
-        } else {
-            computeHTMLBtn.disabled = true;
-        }
-    });
-
-    specificTWToTextbox.addEventListener('input', () => {
-        if (isValidNumber(specificTWFromTextbox.value.split('-')[0]) && isValidNumber(specificTWToTextbox.value.split('-')[0]) &&
-            isValidNumber(specificTWFromTextbox.value.split('-')[1]) && isValidNumber(specificTWToTextbox.value.split('-')[1])){
-            computeHTMLBtn.disabled = false;
-        } else {
-            computeHTMLBtn.disabled = true;
-        }
     });
 
     // Extract the names of the basins with the list of gages
@@ -1332,19 +1257,33 @@ function initialize(data) {
     // Add the basins names to the basin combobox
     addBasinNames(basinName, namesObject);
 
-    instructionsBtn.addEventListener('click', function(){
-        instructionsDiv.classList.toggle('hidden');
+    let selectBasinOption = document.createElement('option');
+    selectBasinOption.value = "Select Basin";
+    selectBasinOption.textContent = "Select Basin";
+    basinName.insertBefore(selectBasinOption, basinName.firstChild);
+    basinName.selectedIndex = 0;
+
+    // Add data to the gage combobox at the beggining of the code
+    gageName.options.length = 0;
+    namesObject.forEach(element => {
+        if (element['basin'] === basinName.value) {
+            element['datman'].forEach(item => {
+                let option = document.createElement('option');
+                option.value = item;
+                option.textContent = item.split('.')[0];
+                gageName.appendChild(option);
+            });
+        }
     });
+
+    let selectGageOption = document.createElement('option');
+    selectGageOption.value = "Select Gage";
+    selectGageOption.textContent = "Select Gage";
+    gageName.insertBefore(selectGageOption, gageName.firstChild);
+    gageName.selectedIndex = 0;
 
     // Change the gage values each time the basin value is changed
     basinName.addEventListener('change', function() {
-
-        if (!haveClass(resultDiv, 'hidden')){
-            resultDiv.classList.add('hidden');
-        }
-
-        computeHTMLBtn.disabled = true;
-        returnSettingToDefault();
 
         gageName.options.length = 0;
         namesObject.forEach(element => {
@@ -1358,101 +1297,108 @@ function initialize(data) {
             }
         });
 
-        // Add empty selections to the dropdown list
         let selectGageOption = document.createElement('option');
         selectGageOption.value = "Select Gage";
-        selectGageOption.text = "Select Gage";
-
+        selectGageOption.textContent = "Select Gage";
         gageName.insertBefore(selectGageOption, gageName.firstChild);
         gageName.selectedIndex = 0;
 
-        PORBeginDate.textContent = "MM/DD/YYYY";
-        POREndDate.textContent = "MM/DD/YYYY";
+        porStartDate.textContent = "MM/DD/YYYY";
+        porEndDate.textContent = "MM/DD/YYYY";
 
-        if (!haveClass(settingDiv, 'hidden')){
-            settingDiv.classList.add('hidden');
+        if (!haveClass(separatorsList[0],'hidden')){
+            separatorsList[0].classList.add('hidden');
         }
 
-        if (!haveClass(separatorDiv, 'hidden')){
-            separatorDiv.classList.add('hidden');
+        if (!haveClass(selectTimeWindowAnalysisDiv,'hidden')){
+            selectTimeWindowAnalysisDiv.classList.add('hidden');
         }
+
+        if (!haveClass(separatorsList[0],'hidden')){
+            separatorsList[0].classList.add('hidden');
+        }
+
+        if (!haveClass(separatorsList[1],'hidden')){
+            separatorsList[1].classList.add('hidden');
+        }
+
+        if (!haveClass(selectTimeWindowShowDiv,'hidden')){
+            selectTimeWindowShowDiv.classList.add('hidden');
+        }
+
+        if (!haveClass(resultsDiv,'hidden')){
+            resultsDiv.classList.add('hidden');
+        };
+
+        porCheckbox.checked = false;
+        porTimeWindow.checked = false;
+
+        computeHTMLBtn.disabled = true;
 
         // Determine if it's project
         isGageProject(data);
 
         updateAvailablePORTable(data);
-
-        beginDate.disabled = true;
-        endDate.disabled = true;
-
-        if (!haveClass(errorMessageDiv, 'hidden')){
-            errorMessageDiv.classList.add('hidden');
-        }
-
-        if (gageName.value === "Select Gage"){
-            PORBeginDate.textContent = "MM/DD/YYYY";
-            POREndDate.textContent = "MM/DD/YYYY";
-        }
 
     });
 
     updateAvailablePORTable(data);
-    PORBeginDate.textContent = "MM/DD/YYYY";
-    POREndDate.textContent = "MM/DD/YYYY";
 
     // Update 'Avaliable POR' table everytime the gage name is changed
     gageName.addEventListener('change', function(){
-
-        if (!haveClass(resultDiv, 'hidden')){
-            resultDiv.classList.add('hidden');
-        }
 
         updateAvailablePORTable(data);
 
         // Determine if it's project
         isGageProject(data);
 
-        if (!haveClass(errorMessageDiv, 'hidden')){
-            errorMessageDiv.classList.add('hidden');
-        }
-
         if (gageName.value === "Select Gage"){
-            PORBeginDate.textContent = "MM/DD/YYYY";
-            POREndDate.textContent = "MM/DD/YYYY";
-
-            if (!haveClass(settingDiv, 'hidden')){
-                settingDiv.classList.add('hidden');
+            porStartDate.textContent = "MM/DD/YYYY";
+            porEndDate.textContent = "MM/DD/YYYY";
+            if (!haveClass(separatorsList[0],'hidden')){
+                separatorsList[0].classList.add('hidden');
             }
 
-            if (!haveClass(separatorDiv, 'hidden')){
-                separatorDiv.classList.add('hidden');
+            if (!haveClass(selectTimeWindowAnalysisDiv,'hidden')){
+                selectTimeWindowAnalysisDiv.classList.add('hidden')
             }
-
-            computeHTMLBtn.disabled = true;
-            returnSettingToDefault();
-
         } else {
-            settingDiv.classList.remove('hidden');
-            separatorDiv.classList.remove('hidden');
+            if (haveClass(separatorsList[0],'hidden')){
+                separatorsList[0].classList.remove('hidden');
+            }
 
-            beginDate.disabled = false;
-            endDate.disabled = false;
-
-            if (isEntryDataValid()){
-                computeHTMLBtn.disabled = false;
+            if (haveClass(selectTimeWindowAnalysisDiv,'hidden')){
+                selectTimeWindowAnalysisDiv.classList.remove('hidden')
             }
         }
 
-        returnSettingToDefault();
+        if (!haveClass(separatorsList[1],'hidden')){
+            separatorsList[1].classList.add('hidden');
+        };
+
+        if (!haveClass(selectTimeWindowShowDiv,'hidden')){
+            selectTimeWindowShowDiv.classList.add('hidden');
+        };
+
+        if (!haveClass(resultsDiv,'hidden')){
+            resultsDiv.classList.add('hidden');
+        };
+
+        porCheckbox.checked = false;
+        porTimeWindow.checked = false;
+
+        computeHTMLBtn.disabled = true;
 
     });
 
+    porCheckbox.addEventListener('click', porCheckboxCheck);
+    porTimeWindow.addEventListener('click', porTimeWindowCheck);
+
+    fromTextbox.addEventListener('input', fromTextboxValidation);
+    toTextbox.addEventListener('input', toTextboxValidation);
+
     // Determine if it's project
     isGageProject(data);
-
-    // Disable dates input at the beginning
-    beginDate.disabled = true;
-    endDate.disabled = true;
 
     // Get all data to create the url
     const domain = "https://coe-mvsuwa04mvs.mvs.usace.army.mil:8243/mvs-data";
@@ -1463,94 +1409,69 @@ function initialize(data) {
 
     loadingPageData();
 
-    // Add empty selections to the dropdown list
-    let selectBasinOption = document.createElement('option');
-    selectBasinOption.value = "Select Basin";
-    selectBasinOption.text = "Select Basin";
-
-    let selectGageOption = document.createElement('option');
-    selectGageOption.value = "Select Gage";
-    selectGageOption.text = "Select Gage";
-
-    basinName.insertBefore(selectBasinOption, basinName.firstChild);
-    basinName.selectedIndex = 0;
-
-    gageName.append(selectGageOption);
-
-    computeHTMLBtn.disabled = true;
-
     // HTML button clicked
     computeHTMLBtn.addEventListener('click', function() {
 
-        // Verify if the selected period is more than one year.
-        if (haveOneYearOfData(beginDate.value, endDate.value) && beginDate.value < endDate.value) {
+        computeHTMLBtn.textContent = "Processing - One Moment";
+        loadingPageData();
 
-            if (!haveClass(errorMessageDiv, 'hidden')){
-                errorMessageDiv.classList.add('hidden');
-            }
+        // Get Datman name ID
+        let datmanName;
+        data.forEach(element => {
+            if (element['id'] === basinName.value) {
+                element['assigned-locations'].forEach(item => {
+                    if (item['location-id'] === gageName.value) {
+                        datmanName = item['tsid-datman']['assigned-time-series'][0]['timeseries-id'];
+                    };
+                });
+            };
+        });
 
-            if (!haveClass(resultDiv, 'hidden')){
-                resultDiv.classList.add('hidden');
-            }
+        // Initialize variables
+        let beginValue = formatString("start date", beginDate.value);
+        let endValue = formatString('end date', endDate.value);
 
-            loadingPageData();
+        // Create the URL to get the data
+        let stageUrl = createUrl(domain,timeSeries,datmanName,officeName,beginValue,endValue,timeZone)
 
-            // Get Datman name ID
-            let datmanName;
-            data.forEach(element => {
-                if (element['id'] === basinName.value) {
-                    element['assigned-locations'].forEach(item => {
-                        if (item['location-id'] === gageName.value) {
-                            datmanName = item['extents-data']['datman'][0]['name'];
+        let pageSize = 100000;
+
+        stageUrl = stageUrl + `&page-size=${pageSize}`;
+
+        console.log("URL:\n", stageUrl);
+
+        if (!haveClass(resultsDiv,'hidden')){
+            resultsDiv.classList.add('hidden');
+        }
+
+        fetchJsonFile(stageUrl, function(newData) { 
+
+            // Update Location Info
+            let gageInformation = null;
+            data.forEach(basin => {
+                if (basin['id'] === basinName.value) {
+                    basin['assigned-locations'].forEach(gage => {
+                        if (gage['location-id'] === gageName.value) {
+                            gageInformation = gage['metadata'];
                         };
                     });
                 };
             });
-            globalDatman = datmanName;
 
-            // Initialize variables
-            let beginValue = formatString("start date", beginDate.value); // YYYY-MM-DD
-            let endValue = formatString('end date', endDate.value); // YYYY-MM-DD
+            main(newData);
 
-            // Create the URL to get the data
-            let stageUrl = createUrl(domain,timeSeries,datmanName,officeName,beginValue,endValue,timeZone)
-
-            let pageSize = 500000;
-
-            stageUrl = stageUrl + `&page-size=${pageSize}`;
-
-            consoleLog ? console.log(stageUrl) : null;
-
-            fetchJsonFile(stageUrl, function(newData) { 
-
-                // Update Location Info
-                let gageInformation = null;
-                data.forEach(basin => {
-                    if (basin['id'] === basinName.value) {
-                        basin['assigned-locations'].forEach(gage => {
-                            if (gage['location-id'] === gageName.value) {
-                                gageInformation = gage['metadata'];
-                            };
-                        });
-                    };
-                });
-
-                main(newData);
-
-
-            }, function(){
-                popupMessage("error", "There was an error getting the data.<br>Error: '" + error + "'");
-                popupWindowBtn.click();
-            });
-
-        } else {
-
-            popupMessage("error", "There was an error with the time window selected. Make sure the time window is <strong>ONE</strong> year or more, and the ending date is greater than the starting date");
+        }, function(error){
+            popupMessage("error", "There was an error getting the data.<br>Error: '" + error + "'");
+            if (haveClass(resultsDiv,'hidden')){
+                resultsDiv.classList.remove('hidden');
+            }
             popupWindowBtn.click();
-        }
+        });
 
         
     });   
+    
+    
     
 }
 
@@ -1558,314 +1479,86 @@ function initialize(data) {
 function main(data) {
     
     let objData = data["values"];
-    let workData = [];
-
-    objData.forEach((element) => {
-
-        // Create Date Element
-        let date = new Date(parseInt(element[0]));
-
-        workData.push({
-            date: date,
-            stage: element[1],
-            qualityCode: element[2]
-        })
-    });
-
-    let allYearsList = []
-    workData.forEach((element) => {
-        let tempYear = `${element.date.getFullYear()}`;
-        if (!allYearsList.includes(tempYear)){
-            allYearsList.push(tempYear)
-        }
-    });
-
-    consoleLog ? console.log( { workData } ) : null;
-
-    let exceedanceLevel = parseFloat(exceedanceLeveltextBox.value);
-
-    let filteredWorkData;
-
-    console.log("Table data: ", filteredWorkData);
-
-    // Filter data by month
-    if (exclusionCheckbox.checked && singleMonthCheckbox.checked) {
-
-        consoleLog ? console.log("Specific Month Checked") : null;
-
-        let monthValue = parseInt(singleMonthDayTextbox.value);
-        workData = filteredWorkData.filter(item => item.date.getMonth() === (monthValue - 1));
-
-        //console.log("New Filtered Data: ", filteredWorkData);
-    }
-
-    // Filter data by day
-    if (exclusionCheckbox.checked && singleDayCheckbox.checked) {
-
-        consoleLog ? console.log("Single Day Checked") : null;
-
-        let dayValue = parseInt(singleMonthDayTextbox.value);
-        workData = filteredWorkData.filter(item => item.date.getDate() === dayValue);
-
-        //console.log("New Filtered Data: ", filteredWorkData);
-    }
-
-    // Filter data by time window
-    if (exclusionCheckbox.checked && specificTimeWindowCheckbox.checked) {
-
-        consoleLog ? console.log("Specific Time Window Checked") : null;
-
-        let fromMonth = parseInt(specificTWFromTextbox.value.split('-')[0]);
-        let fromDay = parseInt(specificTWFromTextbox.value.split('-')[1]);
-        let toMonth = parseInt(specificTWToTextbox.value.split('-')[0]);
-        let toDay = parseInt(specificTWToTextbox.value.split('-')[1]);
-
-        let crossToNextYear = fromMonth > toMonth ? true : false;
-
-        console.log("Cross to next year: ", crossToNextYear);
-
-        let tempWorkData = [];
-
-        workData.forEach((element) => {
-            let tempMonth = element.date.getMonth() + 1;
-            let tempDay = element.date.getDate();
-
-            if (tempMonth === fromMonth && tempDay > fromDay){
-                tempWorkData.push(element);
-            } else if (tempMonth === toMonth && tempDay < toDay){
-                tempWorkData.push(element);
-            } else if (!crossToNextYear && tempMonth > fromMonth && tempMonth < toMonth){
-                tempWorkData.push(element);
-            } else if (crossToNextYear) {
-                if ((tempMonth < toMonth && tempMonth < fromMonth) || (tempMonth > toMonth && tempMonth > fromMonth)) {
-                    tempWorkData.push(element);
-                }
-            }
-
-        });
-
-        filteredWorkData = tempWorkData;
-
-        console.log("New Filtered Data: ", filteredWorkData);
-
-    }
-
-    if (noExclusionCheckbox) {
-        filteredWorkData = workData;
-    }
-
-    let nonExceedanceLevelData = filteredWorkData.length;
-
-    if (exceedanceTypeDropBox.value === "BELOW") {
-        console.log("All BELOW Data.");
-        filteredWorkData = workData.filter(value => value.stage <= exceedanceLevel);
-    } else {
-        console.log("All BELOW Data.");
-        filteredWorkData = workData.filter(value => value.stage >= exceedanceLevel);
-    }
-
-    // Process data
-    let filteredYearsList = []
-    filteredWorkData.forEach((element) => {
-        let tempYear = `${element.date.getFullYear()}`;
-        if (!filteredYearsList.includes(tempYear)){
-            filteredYearsList.push(tempYear)
-        }
-    });
-
-    let arraySortedByDate = [];
-    let arraySortedByStage = [];
-
-    filteredWorkData.forEach((element) => {
-        arraySortedByDate.push(element);
-        arraySortedByStage.push(element);
-    });
-
-    arraySortedByDate.sort((a,b) => new Date(b.date) - new Date(a.date));
-    arraySortedByStage.sort((a,b) => b.stage - a.stage);
-
-    console.log({ arraySortedByDate , arraySortedByStage})
-
-    let percentChance = filteredYearsList.length / allYearsList.length;
-    let baseYearCount = allYearsList.length;
-    let totalOccurences = filteredYearsList.length;
-
-    let totalOccurencesDays = filteredWorkData.length;
-    let totalReviewedDays = nonExceedanceLevelData;
-
-    let infoTextTop = `
-    The <strong>percent chance</strong> that the Stage gage, ${gageName.value}, is <strong>equal to or ${exceedanceTypeDropBox.value} ${exceedanceLeveltextBox.value} 
-    ft</strong>, in any given year, is: <strong>${percentChance.toFixed(3)}</strong>. <br>This is based a year count of: 
-    <strong>${baseYearCount}</strong> and a total number of occurences in any given year: <strong>${totalOccurences}</strong>
-    `;
-
-    let infoTextBottom = `
-    The total number of exceedance occurences between <strong>${beginDate.value}</strong> and <strong>${endDate.value}</strong> is: <strong>${totalOccurencesDays}</strong> Days.
-    <br>The total number of reviewed days between <strong>${beginDate.value}</strong> and <strong>${endDate.value}</strong> is: <strong>${totalReviewedDays}</strong> Days.
-    `;
-
-    resultsInfoTop.innerHTML = infoTextTop;
-    resultsInfoBottom.innerHTML = infoTextBottom;
-
-    populateTable(byYearTableBody, arraySortedByDate);
-    populateTable(magnitudeTableBody, arraySortedByStage);
-
-    if (haveClass(resultDiv, 'hidden')){
-        resultDiv.classList.remove('hidden');
-    }
     
+    // Get list with all the years
+    let wholePeriodList = getList(objData);
+    let totalData = getMeanMinMaxList(wholePeriodList);
+
+    console.log({wholePeriodList, totalData});
+
+    let filteredMaxData = [];
+    let filteredMinData = [];
+
+    let fromDateList = fromTextbox.value.split('-');  // new Date(parseInt(fromDate[2]), parseInt(fromDate[0]) - 1, parseInt(fromDate[1]))  // YYYY-MM-DD
+    let toDateList = toTextbox.value.split('-');  // new Date(parseInt(fromDate[2]), parseInt(fromDate[0]) - 1, parseInt(fromDate[1]))  // YYYY-MM-DD
+
+    let fromDate = new Date(parseInt(fromDateList[2]), parseInt(fromDateList[0]) - 1, parseInt(fromDateList[1]));
+    let toDate = new Date(parseInt(toDateList[2]), parseInt(toDateList[0]) - 1, parseInt(toDateList[1]));
+
+    totalData[2].forEach(item => {
+        let currDateList = `${item.stage[1]}-${item.date}`.split('-');
+        let currDate = new Date(parseInt(currDateList[0]), parseInt(currDateList[1]) - 1, parseInt(currDateList[2]));
+
+        if (currDate >= fromDate && currDate <= toDate){
+            filteredMaxData.push({
+                date: `${item.date}-${item.stage[1]}`,
+                stage: item.stage[0],
+            });
+        }
+    });
+
+    totalData[1].forEach(item => {
+        let currDateList = `${item.stage[1]}-${item.date}`.split('-');
+        let currDate = new Date(parseInt(currDateList[0]), parseInt(currDateList[1]) - 1, parseInt(currDateList[2]));
+
+        if (currDate >= fromDate && currDate <= toDate){
+            filteredMinData.push({
+                date: `${item.date}-${item.stage[1]}`,
+                stage: item.stage[0],
+            });
+        }
+    });
+
+    console.log({filteredMaxData});
+    console.log({filteredMinData});
+
+    filteredMaxData.sort((a,b) => parseMMDDYYYY(a.date) - parseMMDDYYYY(b.date));
+    filteredMinData.sort((a,b) => parseMMDDYYYY(a.date) - parseMMDDYYYY(b.date));
+
+    populateTable(maxTableBody, filteredMaxData);
+    populateTable(minTableBody, filteredMinData);
+
+    console.log({filteredMaxData, filteredMinData});
+
+    let showBeginDate = `${beginDate.value.split('-')[1]}-${beginDate.value.split('-')[2]}-${beginDate.value.split('-')[0]}`;
+    let showEndDate = `${endDate.value.split('-')[1]}-${endDate.value.split('-')[2]}-${endDate.value.split('-')[0]}`;
+
+    resultGageInfoText.innerHTML = `${gageName.value}<br><span style='font-size: 0.8em;'>POR Date ${showBeginDate} to ${showEndDate}</span>`;
+
+    if (filteredMaxData.length === 0){
+        maxTableDiv.innerHTML = `<p>Maximums that occur between the dates:<br><strong>${fromTextbox.value}</strong> and <strong>${toTextbox.value}</strong></p>
+                                 <p style='text-align: center;'>There is no maximum values occurring <br>within the selected time window.</p>`;
+    } else {
+        maxTableText.innerHTML = `Maximums that occur between the dates:<br><strong>${fromTextbox.value}</strong> and <strong>${toTextbox.value}</strong>`;
+    }
+
+    if (filteredMinData.length === 0){
+        minTableDiv.innerHTML = `<p>Minimums that occur between the dates:<br><strong>${fromTextbox.value}</strong> and <strong>${toTextbox.value}</strong></p>
+                                 <p style='text-align: center;'>There is no minimum values occurring <br>within the selected time window.</p>`;
+    } else {
+        minTableText.innerHTML = `Minimums that occur between the dates:<br><strong>${fromTextbox.value}</strong> and <strong>${toTextbox.value}</strong>`;
+    }
+
+    
+
     // Change button text
+    computeHTMLBtn.textContent = "Compute HTML";
     loadingPageData();
 
-}
-
-// Populate tables
-function populateTable(tableBody, tableData){
-
-    tableBody.innerHTML = "";
-
-    for (let i = 0; i < tableData.length; i++) {
-
-        let newRow = document.createElement('tr');
-
-        let day = tableData[i].date.getDate();
-        let month = tableData[i].date.getMonth() + 1;
-        let year = tableData[i].date.getFullYear();
-
-        newRow.innerHTML = `<td>${tableData[i].stage.toFixed(2)}</td>
-                            <td>${month}/${day}/${year}</td>`;
-
-        tableBody.append(newRow);
+    if (haveClass(resultsDiv,'hidden')){
+        resultsDiv.classList.remove('hidden');
     }
 
-}
-
-// Check if all the entry data is valid
-function isEntryDataValid() {
-
-    let checkList = [];
-
-    if (exclusionCheckbox.checked && (singleDayCheckbox.checked || singleMonthCheckbox.checked)){
-        checkList.push({
-            name: "Month-Day",
-            value: singleMonthDayTextbox.value
-        });
-    } else if (exclusionCheckbox.checked && specificTimeWindowCheckbox.checked){
-        checkList.push({
-            name: "STW From Month",
-            value: specificTWFromTextbox.value.split('-')[0]
-        });
-        checkList.push({
-            name: "STW From Day",
-            value: specificTWFromTextbox.value.split('-')[1]
-        });
-
-        checkList.push({
-            name: "STW To Month",
-            value: specificTWToTextbox.value.split('-')[0]
-        });
-        checkList.push({
-            name: "STW To Day",
-            value: specificTWToTextbox.value.split('-')[1]
-        });
-    }
-    let isDataValid = true;
-    checkList.forEach((element) => {
-        if (!isValidNumber(element.value) || element.value === "" || element.value === " "){
-            isDataValid = false
-        }
-    });
-
-    return isDataValid
-        
-}
-
-// Get invalid textbox
-function getInvalidTextbox() {
-    let invalidInput = [];
-
-    let checkList = [{
-        element: groupIntervalTextbox,
-        value: groupIntervalTextbox.value.trim()
-    }];
-
-    if (manualBoundCheckbox.checked){
-        checkList.push({
-            element: maxBoundTextbox,
-            value: maxBoundTextbox.value.trim()
-        });
-        checkList.push({
-            element: minBoundTextbox,
-            value: minBoundTextbox.value.trim()
-        });
-    }
-
-    if (exclusionCheckbox.checked && (singleDayCheckbox.checked || singleMonthCheckbox.checked)){
-        checkList.push({
-            element: singleMonthDayTextbox,
-            value: singleMonthDayTextbox.value.trim()
-        });
-    } else if (exclusionCheckbox.checked && specificTimeWindowCheckbox.checked){
-        // checkList.push({
-        //     element: specificTWFromTextbox,
-        //     value: specificTWFromTextbox.value.split('-')[0].trim()
-        // });
-        // checkList.push({
-        //     element: specificTWFromTextbox,
-        //     value: specificTWFromTextbox.value.split('-')[1].trim()
-        // });
-
-        // checkList.push({
-        //     element: specificTWToTextbox,
-        //     value: specificTWToTextbox.value.split('-')[0].trim()
-        // });
-        // checkList.push({
-        //     element: specificTWToTextbox,
-        //     value: specificTWToTextbox.value.split('-')[1].trim()
-        // });
-    }
-    
-    checkList.forEach((element) => {
-        if (!isValidNumber(element.value) || element.value === "" || element.value === " "){
-            invalidInput.push(element.element);
-        }
-    });
-
-    return invalidInput
-}
-
-// Wait for the fetched data
-async function awaitFetchData(url){
-
-    try{
-        let response = await fetch(url);
-        if (!response.ok){
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        let data = await response.json();
-        let target = Math.round(data['constant-value'] * 100) / 100;
-
-        console.log("Data received:", data);
-        console.log("Target Data:", target);
-
-        return target
-    } catch (error){
-        console.error("Fetch error: ", error.message);
-        return null
-    }
-
-}
-
-// Check is an element have a specific class
-function haveClass(element, classString) {
-    let result = false;
-    element.classList.forEach(item => {
-        if (item === classString){
-            result = true;
-        }
-    });
-    return result
 }
 
 // Is Project Function
@@ -1877,6 +1570,7 @@ function isGageProject(data) {
             element['assigned-locations'].forEach(item => {
                 if (item['location-id'] === gageName.value) {
                     let projectsList = item['project']['assigned-locations'] ? item['project']['assigned-locations'] : null;
+                    consoleLog(2, 'Project List: ', projectsList);
                     if (projectsList) {
                         projectsList.forEach(gage => {
                             if (gage['location-id'] === gageName.value) {
@@ -1892,18 +1586,25 @@ function isGageProject(data) {
     // Change Datum type on the HTML
     if (isProject) {
         isProjectLabel.innerHTML = 'Datum: NGVD29';
+        // mean29_88label.innerHTML = 'Mean Elev:';
+        // extreme29_88label.innerHTML = 'Extreme Elev:';
     } else {
         isProjectLabel.innerHTML = 'Datum: NAVD88';
+        // mean29_88label.innerHTML = 'Mean Stage:';
+        // extreme29_88label.innerHTML = 'Extreme Stage:';
     }
 }
 
 // Update Available POR Function
 function updateAvailablePORTable(data) {
 
+    console.log(data);
+
     data.forEach(element => {
         if (element['id'] === basinName.value) {
             element['assigned-locations'].forEach(item => {
                 if (item['location-id'] === gageName.value) {
+                    consoleLog(2, "Item: ", item)
                     let earliestDate = item['extents-data']['datman'][0]['earliestTime'];
                     let latestDate = item['extents-data']['datman'][0]['latestTime'];
                     let startPORDate = document.querySelector('#info-table .por-start');
@@ -1930,204 +1631,126 @@ function updateAvailablePORTable(data) {
     
 }
 
-function returnSettingToDefault() {
+// Check is an element have a specific class
+function haveClass(element, classString) {
+    let result = false;
+    element.classList.forEach(item => {
+        if (item === classString){
+            result = true;
+        }
+    });
+    return result
+}
 
-    exclusionCheckbox.checked = false;
-    noExclusionCheckbox.checked = true;
+// Populate tables
+function populateTable(tableBody, tableData){
 
-    singleMonthCheckbox.checked = false;
-    singleDayCheckbox.checked = false;
-    specificTimeWindowCheckbox.checked = false;
+    tableBody.innerHTML = "";
 
-    if (!haveClass(singleMonthDayInputDiv, 'hidden')){
-        singleMonthDayInputDiv.classList.add('hidden');
+    for (let i = 0; i < tableData.length; i++) {
+
+        let newRow = document.createElement('tr');
+
+        let date = tableData[i].date.split('-');
+        let day = date[1];
+        let month = date[0];
+        let year = date[2];
+
+        newRow.innerHTML = `<td>${month}-${day}-${year}</td>
+                            <td>${tableData[i].stage.toFixed(2)}</td>`;
+
+        tableBody.append(newRow);
     }
 
-    if (!haveClass(specificTimeWindowDiv, 'hidden')){
-        specificTimeWindowDiv.classList.add('hidden');
-    }
+}
 
-    if (!haveClass(exclusionSettingsDiv, 'hidden')){
-        exclusionSettingsDiv.classList.add('hidden')
+function consoleLog(type, ...message) {
+    if (consoleLogType.includes(type) && type === 1) {
+        console.log("INFO\n", ...message);
+    } else if (consoleLogType.includes(type) && type === 2){
+        console.log("TEST\n", ...message);
+    } else if (consoleLogType.includes(type) && type === 3) {
+        console.log("INITIAL FETCH\n", ...message);
+    } else if (![1, 2, 3].includes(type)) {
+        console.log(`${type}\n`, ...message);
     }
 }
 
-function manualBoxChecked() {
-    if (!manualBoundCheckbox.checked){
-        manualBoundCheckbox.checked = true;
-    }
-
-    if (autoBoundCheckbox.checked){
-        autoBoundCheckbox.checked = false;
-    }
-
-    if (haveClass(manualValuesDiv, 'hidden')){
-        manualValuesDiv.classList.remove('hidden');
-    }
-
-    maxBoundTextbox.value = "";
-    minBoundTextbox.value = "";
-
-    if (isEntryDataValid()){
-        computeHTMLBtn.disabled = false;
-        computePDFBtn.disabled = false;
+function porCheckboxCheck() {
+    if (!porCheckbox.checked){
+        porCheckbox.checked = true;
     } else {
-        computeHTMLBtn.disabled = true;
-        computePDFBtn.disabled = true;
+        porTimeWindow.checked = false;
     }
+
+    if (haveClass(selectTimeWindowShowDiv,'hidden')){
+        selectTimeWindowShowDiv.classList.remove('hidden');
+    }
+
+    if (haveClass(separatorsList[1],'hidden')){
+        separatorsList[1].classList.remove('hidden');
+    }
+
+    let todayDate = new Date();
+    let todayYear = todayDate.getFullYear();
+    fromTextbox.value = `10-01-${todayYear - 1}`;
+    toTextbox.value = `09-30-${todayYear}`;
+
+    beginDate.disabled = true;
+    endDate.disabled = true;
+
+    computeHTMLBtn.disabled = false;
 }
 
-function autoBoxChecked() {
-    if (!autoBoundCheckbox.checked){
-        autoBoundCheckbox.checked = true;
-    }
-
-    if (manualBoundCheckbox.checked){
-        manualBoundCheckbox.checked = false;
-    }
-
-    if (!haveClass(manualValuesDiv, 'hidden')){
-        manualValuesDiv.classList.add('hidden');
-    }
-
-    if (isEntryDataValid()){
-        computeHTMLBtn.disabled = false;
-        computePDFBtn.disabled = false;
+function porTimeWindowCheck() {
+    if (!porTimeWindow.checked){
+        porTimeWindow.checked = true;
     } else {
-        computeHTMLBtn.disabled = true;
-        computePDFBtn.disabled = true;
+        porCheckbox.checked = false;
     }
+
+    if (haveClass(selectTimeWindowShowDiv,'hidden')){
+        selectTimeWindowShowDiv.classList.remove('hidden');
+    }
+
+    if (haveClass(separatorsList[1],'hidden')){
+        separatorsList[1].classList.remove('hidden');
+    }
+
+    let todayDate = new Date();
+    let todayYear = todayDate.getFullYear();
+    fromTextbox.value = `10-01-${todayYear - 1}`;
+    toTextbox.value = `09-30-${todayYear}`;
+
+    beginDate.disabled = false;
+    endDate.disabled = false;
+
+    computeHTMLBtn.disabled = false;
 }
 
-function exclusionBoxChecked() {
-    if (!exclusionCheckbox.checked){
-        exclusionCheckbox.checked = true;
-    } else {
-        computeHTMLBtn.disabled = true;
-    }
+function fromTextboxValidation() {
+    FROM_BOX_VALID = fromTextbox.value.split('-').length === 3;
+    TO_BOX_VALID = toTextbox.value.split('-').length === 3;
 
-    if (noExclusionCheckbox.checked){
-        noExclusionCheckbox.checked = false;
-    }
-
-    if (haveClass(exclusionSettingsDiv, 'hidden')){
-        exclusionSettingsDiv.classList.remove('hidden');
-    }
-
-}
-
-function noExclusionBoxChecked() {
-    if (!noExclusionCheckbox.checked){
-        noExclusionCheckbox.checked = true;
-    }
-
-    if (exclusionCheckbox.checked){
-        exclusionCheckbox.checked = false;
-    }
-
-    if (!haveClass(exclusionSettingsDiv, 'hidden')){
-        exclusionSettingsDiv.classList.add('hidden');
-    }
-
-    if (!haveClass(singleMonthDayInputDiv, 'hidden')){
-        singleMonthDayInputDiv.classList.add('hidden');
-    }
-
-    if (!haveClass(specificTimeWindowDiv, 'hidden')){
-        specificTimeWindowDiv.classList.add('hidden');
-    }
-
-    if (isEntryDataValid()){
+    if (FROM_BOX_VALID && TO_BOX_VALID){
         computeHTMLBtn.disabled = false;
     } else {
         computeHTMLBtn.disabled = true;
     }
-
-    singleDayCheckbox.checked = false;
-    singleMonthCheckbox.checked = false;
-    specificTimeWindowCheckbox.checked = false;
 }
 
-function singleMonthBoxChecked() {
-    if (!singleMonthCheckbox.checked){
-        singleMonthCheckbox.checked = true;
+function toTextboxValidation() {
+    TO_BOX_VALID = toTextbox.value.split('-').length === 3;
+    FROM_BOX_VALID = fromTextbox.value.split('-').length === 3;
+
+    if (FROM_BOX_VALID && TO_BOX_VALID){
+        computeHTMLBtn.disabled = false;
     } else {
         computeHTMLBtn.disabled = true;
     }
-
-    if (singleDayCheckbox.checked){
-        singleDayCheckbox.checked = false;
-    }
-
-    if (specificTimeWindowCheckbox.checked){
-        specificTimeWindowCheckbox.checked = false;
-    }
-
-    if (haveClass(singleMonthDayInputDiv, 'hidden')){
-        singleMonthDayInputDiv.classList.remove('hidden');
-    }
-
-    if (!haveClass(specificTimeWindowDiv, 'hidden')){
-        specificTimeWindowDiv.classList.add('hidden');
-    }
-
-    singleMonthDayTextbox.value = "";
 }
 
-function singleDayBoxChecked() {
-    if (!singleDayCheckbox.checked){
-        singleDayCheckbox.checked = true;
-    } else {
-        computeHTMLBtn.disabled = true;
-    }
-
-    if (singleMonthCheckbox.checked){
-        singleMonthCheckbox.checked = false;
-    }
-
-    if (specificTimeWindowCheckbox.checked){
-        specificTimeWindowCheckbox.checked = false;
-    }
-
-    if (haveClass(singleMonthDayInputDiv, 'hidden')){
-        singleMonthDayInputDiv.classList.remove('hidden');
-    }
-
-    if (!haveClass(specificTimeWindowDiv, 'hidden')){
-        specificTimeWindowDiv.classList.add('hidden');
-    }
-
-    singleMonthDayTextbox.value = "";
+function parseMMDDYYYY(dateStr) {
+    const [month, day, year] = dateStr.split('-');
+    return new Date(`${year}-${month}-${day}`)
 }
-
-function specificTimeWindowBoxChecked() {
-    if (!specificTimeWindowCheckbox.checked){
-        specificTimeWindowCheckbox.checked = true;
-    } else {
-        computeHTMLBtn.disabled = true;
-    }
-
-    if (singleMonthCheckbox.checked){
-        singleMonthCheckbox.checked = false;
-    }
-
-    if (singleDayCheckbox.checked){
-        singleDayCheckbox.checked = false;
-    }
-
-    if (haveClass(specificTimeWindowDiv, 'hidden')){
-        specificTimeWindowDiv.classList.remove('hidden');
-    }
-
-    if (!haveClass(singleMonthDayInputDiv, 'hidden')){
-        singleMonthDayInputDiv.classList.add('hidden');
-    }
-
-    specificTWFromTextbox.value = "";
-    specificTWToTextbox.value = "";
-}
-
-function isValidNumber(value) {
-    return Number.isFinite(Number(value));
-}
-

@@ -21,14 +21,11 @@
     --font-color-1: #FFFFFF;
     --font-color-2: #000;
     --checkbox-border-color: #000;
-    --time-window-color: #afbbff;
-    --result-window-color: #dbe0ff;
 
     --datrep-header-color: rgb(52, 58, 64);
     --datrep-body-color: rgb(248, 249, 250);
     --datrep-body-odd-color: rgb(233, 236, 239);
     --loader-font-color: rgb(51, 51, 51);
-    --error-message: rgb(255, 155, 155);
 
     --table-header-color: darkblue;
     --table-body-odd-color: rgb(228, 228, 228);
@@ -64,14 +61,11 @@
     --font-color-1: #fff;
     --font-color-2: #fff;
     --checkbox-border-color: #fff;
-    --time-window-color: #b3b2b2;
-    --result-window-color: #b3b2b2;
 
     --datrep-header-color: rgb(24, 27, 30);
     --datrep-body-color: rgb(160, 161, 163);
     --datrep-body-odd-color: rgb(107, 108, 109);
     --loader-font-color: rgb(172, 172, 172);
-    --error-message: rgb(255, 50, 50);
 
     --table-header-color: rgb(0, 0, 0);
     --table-body-odd-color: rgb(114, 114, 114);
@@ -257,455 +251,120 @@
     position: relative;
 }
 
+/** Separator Section **/
 .container .separator.hidden {
     display: none;
 }
 
 .container .separator {
-    position: relative;
-    background-color: var(--background-color-2);
+    display: block;
     width: 100%;
     height: 1em;
+    margin-bottom: 1em;
+    background: var(--background-color-2);
+    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.2);
 }
 
-/* ======= SETTINGS DIV ===========*/
-
-#settings-div.hidden {
+/** Select Time Window for Analysis **/
+.container .select-time-window-analysis.hidden{
     display: none;
 }
 
-#settings-div {
+.container .select-time-window-analysis{
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 100%;
-    height: auto;
-    margin-top: 1em;
-    box-shadow: var(--shadow-box);
-}
-
-/* ======== SET TITLE FONT ==========*/
-#settings-div .input-checkbox h3,
-#settings-div .select-data-plot h3,
-#settings-div .statistic-plot-control h3 {
-    font-size: 1.5em;
-    font-weight: bold;
+    gap: 1em;
+    padding: 1em 2em;
     margin-bottom: 1em;
-    color: var(--font-color-2);
-}
- /* ======== CHECKBOX =========*/
-#settings-div .input-checkbox {
-    background-color: var(--background-color-3);
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    padding: 1.5em;
-    gap: 5px;
-    font-weight: bold;
 }
 
-#settings-div .input-checkbox div {
+.container .select-time-window-analysis div{
     display: flex;
+    flex-direction: row;
+    gap: 0.5em;
+}
+
+.select-time-window-analysis .select-por-title{
+
+}
+
+.select-time-window-analysis .select-por-title span{
+    font-size: 0.8em;
+    font-style: italic;
+}
+
+/** Select Time Window To Show **/
+.container .select-result-window.hidden{
+    display: none;
+}
+
+.container .select-result-window{
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    padding: 1em 2em;
+    margin-bottom: 1em;
+}
+
+.container .select-result-window div{
+    display: flex;
+    flex-direction: row;
     gap: 1em;
 }
 
-#settings-div .input-checkbox input {
+.select-result-window .select-result-window-title{
+
+}
+
+#entire-por-checkbox,
+#time-window-checkbox{
     cursor: pointer;
 }
 
-#settings-div .input-checkbox input:checked {
-    accent-color: var(--color-active);
+#from-date,
+#to-date {
+    text-align: center;
 }
 
-/* =============== BUTTONS ===============*/
-#buttons-div {
-    margin-top: 1em;
+
+/** Button Section **/
+
+.container .buttons {
     position: relative;
-    background: var(--background-color-2);
-    width: 100%;
-    height: 3em;
+    background-color: var(--background-color-2);
     display: flex;
-    justify-content: end;
-    align-items: center;
-    padding: 0 1em;
+    justify-content: right;
+    gap: 10px;
+    margin: 0px 3px;
+    padding: 10px;
     box-shadow: var(--shadow-box);
-    gap: 1em;
 }
 
-#instruction-btn {
+.container .buttons #loading-msg {
     position: absolute;
     left: 1em;
     top: 50%;
     transform: translateY(-50%);
-    width: 7em;
-    height: 2em;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 0.5em;
-    font-size: 1em;
-}
-
-#buttons-div button:hover {
-    font-weight: bold;
-    color: #fff;
-    background: rgb(142, 142, 255);
-    padding-top: 0.2em;
-}
-
-#compute-html-btn,
-#compute-pdf-btn {
-    width: 10em;
-    height: 2em;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 0.5em;
-    font-size: 1em;
-}
-
-/* ============ CHECK BOX ================*/
-input[type="checkbox"] {
-    cursor: pointer;
-}
-
-/* ============= SETTINGS ================*/
-.input-checkbox.hidden {
-    display: none;
-}
-
-.input-checkbox {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5em;
-    padding: 1.5em;
-    margin-top: 0.5em;
-    box-shadow: var(--shadow-box);
-}
-
-.input-checkbox h2 {
-    font-size: 1.2em;
-    color: var(--font-color-2);
-}
-
-/* Data Exclusion */
-.data-exclusion {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-}
-
-.data-exclusion .checkbox {
-    display: flex;
-    gap: 2em;
-}
-
-.data-exclusion .checkbox div {
-    display: flex;
-    gap: 0.5em;
-}
-
-/* Time Window */
-.exclusion-settings.hidden {
-    display: none;
-}
-
-.exclusion-settings {
-    display: flex;
-    flex-direction: column;
-    padding: 0.5em;
-    width: 100%;
-    background-color: var(--time-window-color);
-    border-radius: 1em;
-    font-weight: bold;
-    color: black;
-}
-
-.exclusion-settings .checkbox {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-}
-
-.exclusion-settings .single-month-day-only {
-    display: flex;
-    gap: 5em;
-}
-
-.exclusion-settings .single-month-day-only .month-day-options {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-}
-
-.exclusion-settings .single-month-day-only .single-month-day-input.hidden {
-    display: none;
-}
-
-.exclusion-settings .single-month-day-only .single-month-day-input {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1em;
-}
-
-#single-month-day-txbox {
-    width: 6em;
-    text-align: center;
-}
-
-.exclusion-settings .specific-time-window-only {
-    display: flex;
-    gap: 5em;
-}
-
-.exclusion-settings .specific-time-window-only .specific-time-window-input.hidden {
-    display: none;
-}
-
-.exclusion-settings .specific-time-window-only .specific-time-window-input {
-    display: flex;
-}
-
-.exclusion-settings .specific-time-window-only .specific-time-window-input div {
-    display: flex;
-}
-
-.exclusion-settings .specific-time-window-only .specific-time-window-input div input {
-    width: 6em;
-    margin: 0em 1em 0em 0.5em;
-    text-align: center;
-}
-
-/* ========= EXCEEDANCE SETTINGS =========*/
-.input-checkbox .exceedance-settings {
-    display: flex;
-    flex-direction: column;
-    padding: 0.75em;
-    gap: 1em;
-    border-radius: 1em;
-    background: var(--time-window-color);
-}
-
-.exceedance-settings .exceedance-level,
-.exceedance-settings .exceedance-type {
-    display: flex;
-    flex-direction: row;
-    gap: 0.5em;
-}
-
-.exceedance-settings .exceedance-level label,
-.exceedance-settings .exceedance-type label {
-    font-weight: bold;
-}
-
-.exceedance-settings .exceedance-level input {
-    width: 3em;
-    text-align: center;
-}
-
-.exceedance-settings .exceedance-type select {
-    width: 6em;
-}
-
-/* ========= RESULT INFO TEXT ============*/
-#results .results-info {
-    display: flex;
-    flex-direction: column;
-    border-radius: 1em;
-    background: var(--result-window-color);
-    gap: 1em;
-    padding: 2em;
-    margin: 2em;
-    font-size: 1.2em;
-}
-
-#results .results-info p {
-    margin: 0;
-    padding: 0;
-}
-
-/* =============== TABLES ================*/
-#by-year-table,
-#magnitude-table {
-    text-align: center;
-}
-
-#by-year-table thead,
-#magnitude-table thead {
-    background: var(--table-header-color);
     color: white;
-}
-
-#by-year-table thead tr:nth-child(1) th,
-#magnitude-table thead tr:nth-child(1) th {
-    border-top-left-radius: 1em;
-    border-top-right-radius: 1em;
-}
-
-#by-year-table thead th,
-#magnitude-table thead th {
-    padding: 0.5em 1em;
-}
-
-#by-year-table tbody tr:nth-child(odd),
-#magnitude-table tbody tr:nth-child(odd) {
-    background: var(--table-body-odd-color);
-}
-
-#by-year-table tbody tr:nth-child(even),
-#magnitude-table tbody tr:nth-child(even) {
-    background: var(--table-body-even-color);
-}
-
-/* =========== SUB-SEPARATOR =============*/
-#settings-div .sub-separator.hidden {
-    display: none;
-}
-
-#settings-div .sub-separator {
-    display: block;
-    width: 98%;
-    height: 3px;
-    background-color: gray;
-}
-
-/* ========= SPACE BETWEEN ================*/
-
-#settings-div .space-between {
-    width: 100%;
-    height: 2em;
-}
-
-/* ========== INSTRUCTIONS ==============*/
-#instructions-div.hidden {
-    display: none;
-}
-
-#instructions-div {
-    margin: 1em 0em;
-    padding: 1em 2em;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
     font-size: 1em;
-    box-shadow: var(--shadow-box);
-}
-
-#instructions-div .title{
-    font-size: 1.5em;
-    color: var(--font-color-2);
-}
-
-#instructions-div ul li{
-    color: var(--font-color-2);
-    margin-top: 0.5em;
-}
-
-/* ========== ERROR MESSAGE =============*/
-#error-message.hidden {
-    display: none;
-}
-
-#error-message {
-    background-color: var(--error-message);
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0.5em;
-    margin-top: 0.5em;
-    box-shadow: var(--shadow-box);
-}
-
-#error-message h2 {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: var(--font-color-2);
-}
-
-/* ============ RESULTS =================*/
-#results.hidden {
-    display: none;
-}
-
-#results {
-    margin-top: 1em;
-    display: flex;
-    flex-direction: column;
-    gap: 2em;
-    box-shadow: var(--shadow-box);
-}
-
-#results .tables {
-    margin-top: 1em;
-    display: flex;
-    flex-direction: row;
-    gap: 14em;
-    justify-content: center;
-    box-shadow: var(--shadow-box);
-}
-
-#main-table,
-#secundary-table {
-    margin: 1em;
-    padding: 1em 1em;
-    text-align: center;
-}
-
-#main-table thead,
-#secundary-table thead {
-    background: var(--background-color-1);
-    color: white;
-}
-
-#main-table th,
-#secundary-table th {
-    padding: 0.5em 1em;
-    text-align: center;
     font-weight: bold;
 }
 
-#main-table thead tr:nth-child(1) th,
-#secundary-table thead tr:nth-child(1) th {
-    padding: 0.5em 1em;
-    text-align: center;
+.container .buttons button{
+    border-radius: 5px;
+    border: 1px solid var(--border-color-1);
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.container .buttons button:hover{
+    background: var(--color-active);
+    color: var(--font-color-1);
     font-weight: bold;
-    font-size: 1.2em;
-    border-top-left-radius: 1em;
-    border-top-right-radius: 1em;
 }
 
-#main-table tbody tr:nth-child(odd),
-#secundary-table tbody tr:nth-child(odd) {
-    background-color: var(--table-body-odd-color);
-    color: black;
-}
 
-#main-table tbody tr:nth-child(even),
-#secundary-table tbody tr:nth-child(even) {
-    background-color: var(--table-body-even-color);
-    color: black;
-}
-
-#main-table tbody tr:last-child,
-#secundary-table tbody tr:last-child {
-    border-bottom-right-radius: 1em;
-    border-bottom-left-radius: 1em;
-}
-
-#main-table td,
-#secundary-table td {
-    padding: 0.5em 3em;
-    text-align: center;
-}
-
-#main-table td:nth-child(2),
-#secundary-table td:nth-child(2) {
-    padding: 0.5em 3em;
-    text-align: center;
-}
-
-/* ========== LOADING DATA ==============*/
+/** Loading Section **/
 
 #loading-image {
     display: none;
@@ -715,7 +374,6 @@ input[type="checkbox"] {
     position: relative;
     display: flex;
     height: 400px;
-    width: 100%;
     margin: 5px;
     padding: 0;
     justify-content: center;
@@ -724,14 +382,14 @@ input[type="checkbox"] {
     box-shadow: 0 5px 30px rgba(0,0,0,0.30);
 }
 
-#loading-image.show .loader {
+#loading-image .loader {
     position: absolute;
     top: 20%;
     padding: 0;
     margin: 0;
 }
 
-#loading-image.show .loader .text-string {
+#loading-image .loader .text-string {
     position: absolute;
     width: 10em;
     top: 140%;
@@ -742,7 +400,7 @@ input[type="checkbox"] {
     color: rgb(239, 19, 19);
 }
 
-#loading-image.show .loader .text-string b {
+#loading-image .loader .text-string b {
     position: absolute;
     width: 30em;
     top: 140%;
@@ -753,7 +411,106 @@ input[type="checkbox"] {
     color: var(--loader-font-color);
 }
 
-/* =========== DYNAMIC CHANGES ============*/
-.invalid-data {
-    border: 2px red solid;
+/** Content Section **/
+
+#content-body .datrep-results.hidden {
+    display: none;
 }
+
+#content-body .datrep-results {
+    display: block;
+    margin: 3px;
+}
+
+/** Results Section **/
+.results {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 5em;
+    box-shadow: var(--shadow-box);
+}
+
+.results .tables {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 15em;
+}
+
+.results.hidden {
+    display: none;
+}
+
+.results .gage-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0em 0em 2em 0em;
+}
+
+.results .gage-info h2 {
+    text-align: center;
+}
+
+/** Table Text **/
+.tables .maximum,
+.tables .minimum {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.tables .maximum p,
+.tables .minimum p {
+    font-size: 1.2em;
+    text-align: center;
+}
+
+/** Tables **/
+#maximum-table,
+#minimum-table {
+    text-align: center;
+}
+
+#maximum-table thead,
+#minimum-table thead {
+    background: var(--background-color-2);
+    color: white;
+}
+
+#maximum-table thead tr:nth-child(1) th,
+#minimum-table thead tr:nth-child(1) th {
+    padding: 0.5em 1em;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+#maximum-table thead tr:nth-child(1) th:nth-child(1),
+#minimum-table thead tr:nth-child(1) th:nth-child(1) {
+    border-top-left-radius: 1em;
+}
+
+#maximum-table thead tr:nth-child(1) th:nth-child(2),
+#minimum-table thead tr:nth-child(1) th:nth-child(2) {
+    border-top-right-radius: 1em;
+}
+
+#maximum-table tbody td,
+#minimum-table tbody td {
+    padding: 0.5em 2em;
+}
+
+#maximum-table tbody tr:nth-child(odd),
+#minimum-table tbody tr:nth-child(odd) {
+    background-color: var(--table-body-odd-color);
+    color: black;
+}
+
+#maximum-table tbody tr:nth-child(even),
+#minimum-table tbody tr:nth-child(even) {
+    background-color: var(--table-body-even-color);
+    color: black;
+}
+
