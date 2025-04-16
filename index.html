@@ -60,6 +60,10 @@
                                                     <div class="inputs">
                                                         <div class="data-info">
                                                             <div class="basin">
+                                                                <label>Office:</label>
+                                                                <select name="office" id="officeCombobox"></select>
+                                                            </div>
+                                                            <div class="basin">
                                                                 <label>Basin:</label>
                                                                 <select name="basin" id="basinCombobox"></select>
                                                             </div>
@@ -122,7 +126,7 @@
                                                     </div>
                                                     <div>
                                                         <input type="checkbox" id="time-window-checkbox">
-                                                        <label>User Specified Time Window - Enter Time Window in Adjacent Fields (MM-DD-YYYY)</label>
+                                                        <label>User Specified Time Window - Choose dates in the "Select Time Window" section on the top right</label>
                                                     </div>
                                                 </div>
 
@@ -140,6 +144,11 @@
                                                 <div class="buttons">
                                                     <button class="html" id="button-html" disabled>Analyze Statistic</button>
                                                 </div>
+
+                                                <div id="error-message" class="hidden">
+                                                    <h2>Error Message</h2>
+                                                </div>
+
                                             </div>
 
                                             <div id="loading-image">
@@ -176,6 +185,7 @@
                                                 <div class="tables">
                                                     <div class="maximum">
                                                         <p></p>
+                                                        <span></span>
                                                         <table id="maximum-table">
                                                             <thead>
                                                                 <tr>
@@ -188,6 +198,7 @@
                                                     </div>
                                                     <div class="minimum">
                                                         <p></p>
+                                                        <span></span>
                                                         <table id="minimum-table">
                                                             <thead>
                                                                 <tr>
